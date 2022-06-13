@@ -6,11 +6,22 @@
 #include "opencv2/core/utils/logger.hpp"
 #include <stdint.h>
 #include <bits/stdc++.h>
+#include <Windows.h>
 #include <fstream>
 using namespace cv;
 using namespace std;
 
-
+void ClearScreen(char fill = ' ')
+{
+	COORD tl = { 0, 0 };
+	CONSOLE_SCREEN_BUFFER_INFO s;
+	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+	GetConsoleScreenBufferInfo(console, &s);
+	DWORD written, cells = s.dwSize.X * s.dwSize.Y;
+	FillConsoleOutputCharacter(console, fill, cells, tl, &written);
+	FillConsoleOutputAttribute(console, s.wAttributes, cells, tl, &written);
+	SetConsoleCursorPosition(console, tl);
+}
 
 void main() {
 	cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
@@ -27,27 +38,24 @@ void main() {
 		grey_value.push_back(x);
 	}
 	ifile.close();
-	/*vector<vector<char>> output;
-	cap.read(img);
-	int frames = cap.get(CAP_PROP_FRAME_COUNT);
-	output.resize(frames);
-	for (int i = 0; i < frames; i++)
-	{
-		output[i].resize(img.rows*img.cols);
-	}
-	int i = 0;
-	int j = 0;*/
+	int numframes=int(cap.get(CAP_PROP_FRAME_COUNT));
+	stringstream* frames= new stringstream[numframes];
 	vector<vector<vector<char>>> o;
+	int fc=0;
+	
     while (cap.read(img))
     {
         cvtColor(img, imgBW, COLOR_BGR2GRAY);
         imgBW.convertTo(imgC, -1, 1, 0); //contrast
 		vector<vector<char>> f;
 		vector<char> row;
+		std::cout << "Processing " << numframes << " frames\n";
+		std::cout << "Frame Number: " << fc << " out of " << numframes << endl;
+		system("CLS");
 		for (int r = 0; r < imgC.rows; r += img.rows / 50) {
 			for (int c = 0; c < imgC.cols; c += img.cols / 100) {
 				if (imgC.at<uint8_t>(r, c) == 0) {
-					row.push_back(' ');
+					frames[fc] << " ";
 					continue;
 				}
 				int x = imgC.at<uint8_t>(r, c);
@@ -56,38 +64,25 @@ void main() {
 					if (abs(255-grey_value[ci] - x) > abs(255-grey_value[a - 33] - x))
 						ci = a - 33;
 				}
-				row.push_back((char)(ci + 33));
+				frames[fc]<<(char)(ci + 33);
 			}
-			f.push_back(row);
-			cout << endl;
+			std::cout << endl;
 		}
-		o.push_back(f);
-		system("CLS");
+		fc++;
         //imshow("Image", imgC);
 		//waitKey(1);
+		
     }
-	/*i = 0;
-	for (int f = 0; f < frames; f++) {
-		for (int r = 0; r < imgC.rows; r += img.rows / 50) {
-			for (int c = 0; c < imgC.cols; c += img.cols / 100) {
-				cout << output[f][i];
-			}
-			i++;
-			cout << endl;
-		}
-		i = 0;
-		system("CLS");
-	}*/
 	
-	for (int i = 0; i < o.size(); i++)
+	for (int i = 0; i < numframes; i++)
 	{
-		for (int j = 0; j < o[i].size(); j++) {
-			for (int k = 0; k < o[i][j].size(); k++)
-			{
-				cout << o[i][j][k];
-				if (k % (img.cols / 100) == 0)
-					cout << endl;
-			}
-		}
+		ClearScreen();
+		
+		printf("\r");
+		printf("%s", frames[i].str().c_str());
+		Sleep(100);
 	}
+
+	
+	
 }
