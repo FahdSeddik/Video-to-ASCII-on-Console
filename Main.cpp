@@ -244,12 +244,15 @@ void main() {
 	cout << "Enter video file name : ";
 	cin >> videoName; 
 	string ans="D";
-	cout << "Clear DisplayFiles directory? (Y/N): ";
-	cin >> ans;
-	if (ans == "Y") {
-		std::filesystem::remove_all("DisplayFiles/");
+	if (std::filesystem::is_directory("DisplayFiles/")) {
+		cout << "Clear DisplayFiles directory? (Y/N): ";
+		cin >> ans;
+		if (ans == "Y") {
+			std::filesystem::remove_all("DisplayFiles/");
+			std::filesystem::create_directory("DisplayFiles/");
+		}
+	}else
 		std::filesystem::create_directory("DisplayFiles/");
-	}
 	VideoCapture cap(videoName);
 	int numberofFrames = cap.get(CAP_PROP_FRAME_COUNT);
 	do {
