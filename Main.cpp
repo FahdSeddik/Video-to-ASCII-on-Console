@@ -172,7 +172,7 @@ void DisplayVideo(int numberofFrames,int frameRate,int size) {
 // DisplayVideo at the end of processing
 void ProcessVideo(VideoCapture cap, string videoName,int size) {
 	ChangeConsoleSize(size);
-	ClearScreen();
+	//ClearScreen();
 	MaximizeWindow();
 	vector<int> GreyValues(94, 0); //94 different characters
 
