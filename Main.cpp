@@ -120,15 +120,7 @@ string ConvertToText(Mat& frame,vector<int>& GreyValues) {
 
 
 //Get text from ConvertToText then write it to a txt file
-void ProcessFrame(Mat& frame,int frameNumber,vector<int>& GreyValues) {
-	ChangeConsoleSize(16);
-	MaximizeWindow();
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	int w_width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-	int w_height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-
+void ProcessFrame(Mat& frame,int frameNumber,vector<int>& GreyValues,int w_width,int w_height) {
 	double height_ratio, width_ratio;
 
 	height_ratio = (double)w_height / frame.size().height;
@@ -151,23 +143,20 @@ void DisplayVideo(int numberofFrames,int frameRate,int size) {
 	MaximizeWindow();
 
 	ClearScreen();
-	ifstream ifile;
 	int FPS = frameRate;
 
 	auto time_between_frames = chrono::microseconds(chrono::seconds(1)) / FPS;
 
 	auto target_tp = chrono::steady_clock::now();
-	stringstream str;
-	string out;
 	for (int i = 1; i <= numberofFrames; i++)
 	{
-		ifile.open("DisplayFiles/" + to_string(i) + ".txt");
-		str << ifile.rdbuf();
-		out = str.str();
+		ifstream ifile("DisplayFiles/" + to_string(i) + ".txt");
+		stringstream stream;
+		stream << ifile.rdbuf();
 		ifile.close();
 
 		printf("\r");
-		printf("%s", out.c_str());
+		printf("%s", stream.str().c_str());
 		printf("\n");
 		
 		target_tp += time_between_frames;
@@ -195,11 +184,26 @@ void ProcessVideo(VideoCapture cap, string videoName,int size) {
 	cout << "Do you want to process the video from the beginning ? (Y/N): ";
 	string ans;
 	cin >> ans;
+
 	if (ans == "Y") {
+		cout << "Enter size (6 best quality,8,10,12,16 worst quality): ";
+		cin >> size;
+		ofstream ofile("DisplayFiles/size.txt");
+		ofile << size;
+		ofile.close();
+		ChangeConsoleSize(size);
+		MaximizeWindow();
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+		int w_width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		int w_height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+		ChangeConsoleSize(16);
 		for (int i = 1; i <= numberofFrames; i++)
 		{
 			cap.read(frame);
-			ProcessFrame(frame, i, GreyValues);
+			ProcessFrame(frame, i, GreyValues,w_width,w_height);
 			if (i % (numberofFrames / 10) == 0) {
 				progressbar += "#";
 				if (!emptybar.empty())
@@ -210,113 +214,47 @@ void ProcessVideo(VideoCapture cap, string videoName,int size) {
 			cout << "[" << progressbar << emptybar << "]\n";
 		}
 	}
-
-
+	else {
+		ifstream ifile("DisplayFiles/size.txt");
+		ifile >> size;
+		ifile.close();
+	}
 	DisplayVideo(numberofFrames,frameRate,size);
 }
-
-
-
-
-/*
-	Colors Selectors for Console
-	system("Color F0") means White Background, Black Text
-	0 = Black        8 = Gray
-	1 = Blue        9 = Light Blue
-	2 = Green        A = Light Green
-	3 = Blue-Gray        B = Cyan
-	4 = Redd      C = Light Red
-	5 = Purple     D = Light Purple
-	6 = Yellow        E = Light Yellow
-	7 = White       F = Clear white
-
-	*/
 
 
 void main() {
 	cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
-	////setup console screen
-	////unicode chars
-	//wchar_t* screen = new wchar_t[nScreenHeight * nScreenWidth];
-	////console screen buffer
-	//HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
-	////set it to be our console
-	//SetConsoleActiveScreenBuffer(hConsole);
-	//DWORD dwBytesWritten = 0;
-	////null character to tell console to escape
-	//screen[nScreenHeight * nScreenWidth - 1] = '\0';
-	////(screen buffer, characters, dimensions or number, position to print x y , extra variable)
-	//WriteConsoleOutputCharacter(hConsole, screen, nScreenHeight * nScreenWidth, { 0,0 }, &dwBytesWritten);
+	
 	int size = 16;
 	system("Color F0");
 	ChangeConsoleSize(size);
 	ClearScreen();
 	MaximizeWindow();
 	
-
-
-
 	string videoName;
 	cout << "Enter video file name : ";
 	cin >> videoName; 
 
-
+	string ans="D";
 	VideoCapture cap(videoName);
-
-	ProcessVideo(cap, videoName,size);
-	
-
+	int numberofFrames = cap.get(CAP_PROP_FRAME_COUNT);
+	do {
+		ProcessVideo(cap, videoName, size);
+		ChangeConsoleSize(16);
+		ClearScreen();
+		cout << "Play video again or Delete files or Exit ? (P/D/E): ";
+		cin >> ans;
+	} while (ans == "P");
+	if (ans == "D") {
+		for (int i = 1; i <= numberofFrames; i++)
+		{
+			string f = "DisplayFiles/" + to_string(i) + ".txt";
+			remove(f.c_str());
+		}
+		remove("DisplayFiles/size.txt");
+	}
 }
 
 
-
-//
-//
-//string path = "Paint.mp4";
-//VideoCapture cap(path);
-//Mat img, imgBW, imgC;
-//ifstream ifile;
-//ifile.open("ASCII VALUES/Values.txt");
-//vector<int> grey_value;
-//for (int i = 0; i < (126 - 33 + 1); i++) {
-//	int x;
-//	ifile >> x >> x;
-//	grey_value.push_back(x);
-//}
-//ifile.close();
-//int numframes = int(cap.get(CAP_PROP_FRAME_COUNT));
-//stringstream* frames = new stringstream[numframes];
-//vector<vector<vector<char>>> o;
-//int fc = 0;
-//
-//while (cap.read(img))
-//{
-//	cvtColor(img, imgBW, COLOR_BGR2GRAY);
-//	imgBW.convertTo(imgC, -1, 1, 0); //contrast
-//	vector<vector<char>> f;
-//	vector<char> row;
-//	std::cout << "Processing " << numframes << " frames\n";
-//	std::cout << "Frame Number: " << fc << " out of " << numframes << endl;
-//	system("CLS");
-//	for (int r = 0; r < imgC.rows; r += img.rows / 50) {
-//		for (int c = 0; c < imgC.cols; c += img.cols / 100) {
-//			if (imgC.at<uint8_t>(r, c) == 0) {
-//				frames[fc] << " ";
-//				continue;
-//			}
-//			int x = imgC.at<uint8_t>(r, c);
-//			int ci = 0;
-//			for (int a = 34; a <= 126; a++) {
-//				if (abs(255 - grey_value[ci] - x) > abs(255 - grey_value[a - 33] - x))
-//					ci = a - 33;
-//			}
-//			frames[fc] << (char)(ci + 33);
-//		}
-//		std::cout << endl;
-//	}
-//	fc++;
-//	//imshow("Image", imgC);
-//	//waitKey(1);
-//
-//}
