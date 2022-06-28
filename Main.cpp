@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <fstream>
 #include <WinUser.h>
+#include <filesystem>
 #include <stdio.h>
 using namespace cv;
 using namespace std;
@@ -154,7 +155,8 @@ void DisplayVideo(int numberofFrames,int frameRate,int size) {
 		stringstream stream;
 		stream << ifile.rdbuf();
 		ifile.close();
-
+		if(size==6)
+			Sleep(10);
 		printf("\r");
 		printf("%s", stream.str().c_str());
 		printf("\n");
@@ -184,8 +186,13 @@ void ProcessVideo(VideoCapture cap, string videoName,int size) {
 	cout << "Do you want to process the video from the beginning ? (Y/N): ";
 	string ans;
 	cin >> ans;
-
+	if (ans != "Y" && std::filesystem::is_empty("DisplayFiles/")) {
+		cout << "Empty Directory Detected: Start processing video again...\n";
+		ans = "Y";
+	}
 	if (ans == "Y") {
+		std::filesystem::remove_all("DisplayFiles/");
+		std::filesystem::create_directory("DisplayFiles/");
 		cout << "Enter size (6 best quality,8,10,12,16 worst quality): ";
 		cin >> size;
 		ofstream ofile("DisplayFiles/size.txt");
@@ -236,24 +243,25 @@ void main() {
 	string videoName;
 	cout << "Enter video file name : ";
 	cin >> videoName; 
-
 	string ans="D";
+	cout << "Clear DisplayFiles directory? (Y/N): ";
+	cin >> ans;
+	if (ans == "Y") {
+		std::filesystem::remove_all("DisplayFiles/");
+		std::filesystem::create_directory("DisplayFiles/");
+	}
 	VideoCapture cap(videoName);
 	int numberofFrames = cap.get(CAP_PROP_FRAME_COUNT);
 	do {
 		ProcessVideo(cap, videoName, size);
 		ChangeConsoleSize(16);
 		ClearScreen();
-		cout << "Play video again or Delete files or Exit ? (P/D/E): ";
+		cout << "Play video again or Delete files (and exit) or Exit only ? (P/D/E): ";
 		cin >> ans;
 	} while (ans == "P");
 	if (ans == "D") {
-		for (int i = 1; i <= numberofFrames; i++)
-		{
-			string f = "DisplayFiles/" + to_string(i) + ".txt";
-			remove(f.c_str());
-		}
-		remove("DisplayFiles/size.txt");
+		std::filesystem::remove_all("DisplayFiles/");
+		std::filesystem::create_directory("DisplayFiles/");
 	}
 }
 
