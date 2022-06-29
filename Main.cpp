@@ -155,8 +155,10 @@ void DisplayVideo(int numberofFrames,int frameRate,int size) {
 		stringstream stream;
 		stream << ifile.rdbuf();
 		ifile.close();
-		if(size==6)
+		if (size == 6)
 			Sleep(10);
+		else if (size == 8)
+			Sleep(2);
 		printf("\r");
 		printf("%s", stream.str().c_str());
 		printf("\n");
@@ -170,19 +172,20 @@ void DisplayVideo(int numberofFrames,int frameRate,int size) {
 // Call
 // ProcessFrame for each frame in the video
 // DisplayVideo at the end of processing
-void ProcessVideo(VideoCapture cap, string videoName,int size) {
+void ProcessVideo(string videoName,int size) {
 	ChangeConsoleSize(size);
 	//ClearScreen();
 	MaximizeWindow();
 	vector<int> GreyValues(94, 0); //94 different characters
-
+	
 	LoadGreyValues(GreyValues); //gets values from text file
-
+	VideoCapture cap(videoName);
 	int frameRate = cap.get(CAP_PROP_FPS);
 	int numberofFrames = cap.get(CAP_PROP_FRAME_COUNT);
 	Mat frame;
 	string progressbar = "";
 	string emptybar = "----------";
+	
 	cout << "Do you want to process the video from the beginning ? (Y/N): ";
 	string ans;
 	cin >> ans;
@@ -191,12 +194,15 @@ void ProcessVideo(VideoCapture cap, string videoName,int size) {
 		ans = "Y";
 	}
 	if (ans == "Y") {
+		
 		std::filesystem::remove_all("DisplayFiles/");
+		Sleep(1000);
 		std::filesystem::create_directory("DisplayFiles/");
+		
 		cout << "Enter size (6 best quality,8,10,12,16 worst quality): ";
 		cin >> size;
-		ofstream ofile("DisplayFiles/size.txt");
-		ofile << size;
+		ofstream ofile("DisplayFiles/info.txt");
+		ofile << numberofFrames<<" "<<frameRate<<" " << size;
 		ofile.close();
 		ChangeConsoleSize(size);
 		MaximizeWindow();
@@ -222,10 +228,15 @@ void ProcessVideo(VideoCapture cap, string videoName,int size) {
 		}
 	}
 	else {
-		ifstream ifile("DisplayFiles/size.txt");
-		ifile >> size;
+		ifstream ifile("DisplayFiles/info.txt");
+		ifile >> numberofFrames>>frameRate>>size;
 		ifile.close();
 	}
+
+	cout << "Video ready.\n"
+		<< "Play? (Enter): ";
+	cin.ignore();
+	cin.ignore();
 	DisplayVideo(numberofFrames,frameRate,size);
 }
 
@@ -239,33 +250,76 @@ void main() {
 	ChangeConsoleSize(size);
 	ClearScreen();
 	MaximizeWindow();
-	
-	string videoName;
-	cout << "Enter video file name : ";
-	cin >> videoName; 
 	string ans="D";
-	if (std::filesystem::is_directory("DisplayFiles/")) {
-		cout << "Clear DisplayFiles directory? (Y/N): ";
+	string videoName;
+	int numberofFrames,frameRate;
+	if (std::filesystem::is_directory("DisplayFiles/") && !std::filesystem::is_empty("DisplayFiles/")) {
+		cout << "Found previously processed video.\n" <<
+			"Do you want to play processed video? (Y/N):";
 		cin >> ans;
 		if (ans == "Y") {
+			ifstream ifile("DisplayFiles/info.txt");
+			if (ifile.is_open()) {
+				ifile >> numberofFrames >> frameRate >> size;
+				ifile.close();
+				if (std::filesystem::is_directory("DisplayFiles/" + to_string(numberofFrames) + ".txt")) {
+					do {
+						DisplayVideo(numberofFrames, frameRate, size);
+						ChangeConsoleSize(16);
+						ClearScreen();
+						MaximizeWindow();
+						cout << "Play video again or Delete files (and exit) or Exit only ? (P/D/E): ";
+						cin >> ans;
+					} while (ans == "P");
+					if (ans == "D") {
+						std::filesystem::remove_all("DisplayFiles/");
+						std::filesystem::create_directory("DisplayFiles/");
+					}
+					else
+						ans = "Y";
+				}
+				else {
+					cout << "Error: DisplayFiles not complete.\n";
+					ans = "N";
+				}
+			}
+			else {
+				cout << "Error: DisplayFiles not complete.\n";
+				ans = "N";
+			}
+		}
+	}
+	if(ans!="Y") {
+
+		std::filesystem::remove_all("DisplayFiles/");
+		std::filesystem::create_directory("DisplayFiles/");
+		cout << "Enter video file name : ";
+		cin >> videoName;
+		if (!std::filesystem::is_empty("DisplayFiles/")) {
+			cout << "Clear DisplayFiles directory? (Y/N): ";
+			cin >> ans;
+			if (ans == "Y") {
+				std::filesystem::remove_all("DisplayFiles/");
+				std::filesystem::create_directory("DisplayFiles/");
+			}
+		}
+		else
+			std::filesystem::create_directory("DisplayFiles/");
+		do {
+			ProcessVideo(videoName, size);
+			ChangeConsoleSize(16);
+			ClearScreen();
+			cout << "Play video again or Delete files (and exit) or Exit only ? (P/D/E): ";
+			cin >> ans;
+		} while (ans == "P");
+		if (ans == "D") {
 			std::filesystem::remove_all("DisplayFiles/");
 			std::filesystem::create_directory("DisplayFiles/");
 		}
-	}else
-		std::filesystem::create_directory("DisplayFiles/");
-	VideoCapture cap(videoName);
-	int numberofFrames = cap.get(CAP_PROP_FRAME_COUNT);
-	do {
-		ProcessVideo(cap, videoName, size);
-		ChangeConsoleSize(16);
-		ClearScreen();
-		cout << "Play video again or Delete files (and exit) or Exit only ? (P/D/E): ";
-		cin >> ans;
-	} while (ans == "P");
-	if (ans == "D") {
-		std::filesystem::remove_all("DisplayFiles/");
-		std::filesystem::create_directory("DisplayFiles/");
 	}
+	
+	
+	
 }
 
 
