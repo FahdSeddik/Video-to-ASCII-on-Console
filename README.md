@@ -1,3 +1,5 @@
+
+
 # Video to ASCII Console Animator
 
 This C++ program converts a .mp4 file to text-art files using [Image-To-TextArt](https://github.com/FahdSeddik/Image-To-TextArt) tool that I previously developed.
@@ -6,7 +8,6 @@ This C++ program converts a .mp4 file to text-art files using [Image-To-TextArt]
 
 
  https://user-images.githubusercontent.com/62207434/176327257-d8e3fee2-1b84-484a-8946-b921a385b887.mp4
-
 
 
 ## Process
