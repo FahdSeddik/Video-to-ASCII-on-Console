@@ -17,7 +17,7 @@ project.
 
 - DisplayFiles directory contains:
     1. Text files numbered according to frame number
-    2. size.txt has console size setting used to render previous video
+    2. info.txt has console and video settings used to render previous video
 
 ## Instructions
 
