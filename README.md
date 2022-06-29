@@ -33,6 +33,7 @@ project.
  **Note: small text size might cause screen stuttering due to printing speed of console**  
  ## Tasks
  
- - [x] <s>Added sleep delay text size 6</s>
+ - [x] <s>Added sleep delay text size 6 and 8</s>
+ - [x] <s>Deal with previously processed videos</s>
  - [ ] Implement efficient console printing
 
