@@ -38,3 +38,5 @@ project.
  - [x] <s>Deal with previously processed videos</s>
  - [ ] Implement efficient console printing
 
+## License
+[MIT License](https://github.com/FahdSeddik/Video-to-ASCII-on-Console/blob/master/LICENSE)
