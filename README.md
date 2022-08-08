@@ -31,9 +31,10 @@ project.
     1. First time rendering the video
     2. You want to change render text size 
 
-- **2 Videos are already provided that you can render**:  
+- **3 Videos are already provided that you can render**:  
     - Noot.mp4  
     - Paint.mp4
+    - GenosVSSaitama.mp4
     
  **Note: small text size might cause screen stuttering due to printing speed of console**  
  ## Tasks
