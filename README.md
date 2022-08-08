@@ -10,6 +10,10 @@ This C++ program converts a .mp4 file to text-art files using [Image-To-TextArt]
  https://user-images.githubusercontent.com/62207434/176327257-d8e3fee2-1b84-484a-8946-b921a385b887.mp4
 
 
+https://user-images.githubusercontent.com/62207434/183315348-caad5400-d7c2-4ee4-a48c-1d9fc76aea73.mp4
+
+
+
 ## Process
 
 The video is broken up into frames and each are processed like a normal image would be processed in the [Image-To-TextArt](https://github.com/FahdSeddik/Image-To-TextArt)
